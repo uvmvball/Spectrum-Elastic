@@ -5,8 +5,8 @@
 #
 
 host="127.0.0.1"
-user="root"
-psw="root"
+user="USER"
+psw="PASSWORD"
 database="srmdbapi"
 query="SELECT    
 	    ( v_fact_event.event_key ),

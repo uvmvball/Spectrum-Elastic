@@ -2,7 +2,9 @@
 Integration between spectrum and elasticsearch for alarmas and events.
 
 # Arquitectura
+
 Spectrum Alarm Notifier  → elasticsearch ←→ kibana
+
 MySQL srmdbapi.db ← scheduled script → elasticsearch ←→ kibana
 
 # Requerimientos

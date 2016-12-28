@@ -1,0 +1,47 @@
+curl -XPUT <ELASTICSEARCHIP>:9200/spec_alarms -d ‘{
+  “settings”: {
+    “index” : {  “number_of_replicas” : 0,  “number_of_shards” : 5    },
+    “analysis”: {
+      “analyzer”: {
+        “global_analyzer”: { “type” : “custom”, “search_analyzer”: “keyword”, “tokenizer” : “global_tokenizer”  },
+        “keylower”:{ “tokenizer”:”keyword”, “filter”:”lowercase”  }   },
+      “tokenizer”: {
+        “global_tokenizer”:{”type”: “pattern”, “pattern”: “:” }  }  }  },
+    “mappings”:{
+     “SANM”:{
+        “_all”:{ “enabled”:true },
+        “_ttl”: { “enabled”: true, “default”: “500d” },
+        “properties”:{
+           “Ack”:{ “type”:”boolean”, “index”:”not_analyzed” },
+           “AlarmID”:{ “type”:”string”, “index”:”not_analyzed” },
+           “AlarmState”:{ “type”:”string”, “index”:”not_analyzed” },
+           “AlarmTitle”:{ “type”:”string”, “analyzer”:”keylower” },
+           “DeviceType”:{ “type”:”string”, “index”:”not_analyzed” },
+           “EndTime”:{ “type”:”date”, “format”:”date_time_no_millis” },
+           “EventMessage”:{ “type”:”string”, “analyzer”:”global_analyzer” },
+           “GlobalAlarmID”:{ “type”:”string”, “index”:”not_analyzed” },
+           “GlobalCollection”:{ “type”:”string”, “analyzer”:”global_analyzer” },
+           “TopologyModelNameString”:{ “type”:”string”, “analyzer”:”global_analyzer” },
+           “IPAddress”:{  “type”:”ip”  },
+           “Landscape”:{ “type”:”string”, “analyzer”:”keylower” },
+           “Location”:{ “type” : “geo_point” },
+           “ModelHandle”:{ “type”:”string” },
+           “ModelName”:{ “type”:”string”, “analyzer”:”keylower” },
+           “Notes”:{ “type”:”string”, “analyzer”:”keylower” },
+           “ModelType”:{ “type”:”string”, “index”:”not_analyzed” },
+           “ModelTypeHandle”:{ “type”:”string”, “index”:”not_analyzed” },
+           “ProbableCauseID”:{ “type”:”string”, “analyzer”:”keylower” },
+           “TicketID”:{ “type”:”string”, “index”:”not_analyzed” },
+           “Severity”:{ “type”:”string”, “index”:”not_analyzed” }, 
+           “ModelClass”:{ “type”:”string”, “analyzer”:”keylower” },
+           “SpectroSERVER”:{ “type”:”string”, “index”:”not_analyzed” },
+           “StartTime”:{ “type”:”date”, “format”:”date_time_no_millis” },
+           “Assignment”:{ “type”:”string”, “index”:”not_analyzed” },
+           “Status”:{ “type”:”string”, “index”:”not_analyzed” },
+           “AssetTag”:{ “type”:”string”, “index”:”not_analyzed” },
+           “AssetID”:{ “type”:”string”, “index”:”not_analyzed” },
+           “AssetOwner”:{ “type”:”string”, “index”:”not_analyzed” },
+           “AssetOrganization”:{ “type”:”string”, “analyzer”:”global_analyzer” },
+           “AssetOffice”:{ “type”:”string”, “index”:”not_analyzed” },
+           “AssetDescription”:{ “type”:”string”, “index”:”not_analyzed” }
+        } } } } ‘

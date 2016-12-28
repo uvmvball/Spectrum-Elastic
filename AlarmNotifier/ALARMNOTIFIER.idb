@@ -1,0 +1,14 @@
+PARTNAME;ElasticSearch;
+APPNAME;ElasticSearchDB;
+WORKPATH;$SPECROOT/Notifier;
+LOGNAMEPATH;$WORKPATH/ElasticSearchDB.OUT;
+AUTORESTART;y;
+AUTOBOOTSTART;y;
+#STATEBASED;N;
+NUMPROCS;1; // one per host
+RETRYTIMEOUT;600; // 10 minutes
+TICKETUSER;spectrum;
+RETRYMAX;3;     // 3 retries allowed
+STARTPRIORITY;30;
+SERVERPROCESS;Y;
+ARGV;$SPECROOT/Notifier/AlarmNotifier<CSEXE> -r .ElasticSearchRC;

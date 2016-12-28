@@ -1,0 +1,25 @@
+curl -XPOST <ELASTICSEARCHIP>:9200/spec_events -d ‘{
+  “settings”: {
+    “index” : {  “number_of_replicas” : 0,  “number_of_shards” : 10   },
+    “analysis”: {
+      “analyzer”: {
+        “keylower”:{ “tokenizer”:”keyword”, “filter”:”lowercase”  }
+      }
+    }
+  },
+    “mappings”:{
+     “srmdbapi”:{
+        “_all”:{ “enabled”:true },
+        “_ttl”: { “enabled”: true, “default”: 30d” },
+        “properties”:{
+           “EventKey”:{  “type”:”string”,  “index”:”no”  },
+           “ModelName”:{ “type”:”string”, “analyzer”:”keylower” },
+           “Time”:{ “type”:”date”, “format”:”date_time_no_millis” },
+           “EventMessage”:{ “type”:”string”, “analyzer”:”keylower” },
+           “EventTitle”:{ “type”:”string”, “index”:”not_analyzed” },
+           “Landscape”:{ “type”:”string”, “analyzer”:”keylower” },
+           “Type”:{ “type”:”string”, “index”:”not_analyzed” },
+           “Creator”:{ “type”:”string”, “index”:”not_analyzed” }
+        }
+      }
+    } } }  } ‘

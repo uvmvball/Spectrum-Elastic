@@ -1,6 +1,12 @@
 # Spectrum-Elastic
 Integration between spectrum and elasticsearch for alarmas and events.
 
+CA Spectrum is licensed by CA technologies www.ca.com
+Elasticsearch and Kibana are from www.elastic.co 
+
+All the rest of integration is from my own :)
+
+
 # Arquitectura
 
 Spectrum Alarm Notifier  → elasticsearch ←→ kibana
@@ -86,4 +92,6 @@ An then.... in ElasticSearchDb.OUT
 {”_index”:”spec_alarms”,”_type”:”SANM”,”_id”:”7983171”,”_version”:1,”_shards”:{”total”:1,”successful”:1,”failed”:0},”created”:true}
 
 
-
+Enjoy !
+Diego Pereyra
+From Argentine

@@ -2,6 +2,7 @@
 Integration between spectrum and elasticsearch for alarmas and events.
 
 CA Spectrum is licensed by CA technologies www.ca.com
+
 Elasticsearch and Kibana are from www.elastic.co 
 
 All the rest of integration is from my own :)
@@ -15,9 +16,13 @@ MySQL srmdbapi.db ← scheduled script → elasticsearch ←→ kibana
 
 # Requerimientos
 I inform the used version of each tool, but this can vary without generating drawbacks in the integration.
+
 •	SO LINUX
+
 •	Kibana 4.6.0
+
 •	Elasticsearch 2.4.0
+
 •	CA Spectrum 9.2
 
 # Implementation

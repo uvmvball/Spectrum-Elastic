@@ -1,0 +1,180 @@
+#!/bin/sh
+
+source "./ModelClassArray.sh"
+
+DATE=$1
+TIME=$2
+MTYPE=$3
+MNAME=”$4”
+AID=$5
+SEV=$6
+CAUSE=$7
+REPAIRPERSON=”$8”
+
+if [ “$USE_NEW_INTERFACE” = “TRUE” ]
+then
+    # ALARMSTATUS now being passed via environment variable
+    shift 8
+else
+    STATUS=$9
+    shift 9
+fi
+
+SERVER=$1
+LANDSCAPE=$2
+MHANDLE=$3
+MTHANDLE=$4
+IPADDRESS=$5
+SECSTR=$6
+ALARMSTATE=$7
+ACKD=$8
+CLEARABLE=$9
+
+shift 9
+
+if [ “$USE_NEW_INTERFACE” = “TRUE” ]
+then
+    # PCAUSE and EVENTMSG now passed via environment variables
+    LOCATION=”$2”
+    AGE=$3
+    NOTIFDATA=$4
+    PID=$5
+    SANM=$6
+    shift 6
+else
+    PCAUSE=‘echo “$2” | tr ‘\350’ ‘\012’ | tr ‘\351’ ‘”’‘
+    LOCATION=”$3”
+    AGE=$4
+    NOTIFDATA=$5
+    EVENTMSG=‘echo “$6” | tr ‘\350’ ‘\012’ | tr ‘\351’ ‘”’‘
+    PID=$7
+    SANM=$8
+    shift 8
+fi
+
+DTYPE=”$1”
+
+Z=”-0300”
+STARTTIME=${DATE:6:4}-${DATE:0:2}-${DATE:3:2}T${TIME:0:2}:${TIME:3:2}:${TIME:6:2}$Z
+
+ATITTLE=‘echo $PCAUSE | awk -F’SYMPTOMS:’ ‘{print $1}’‘ 
+ATITTLE=”$(tr -d “\”\‘’” <<<$ATITTLE)”
+
+#------------------------------VERIFICACIONES DE TIPO DE DATOS
+EVENTMSG=‘echo $EVENTMSG | grep ^[^\]]*\] | awk ‘NR==1’‘
+EVENTMSG=”$(tr -d “\”\‘’” <<<$EVENTMSG)”
+
+#------------------------------VALIDO $MNAME
+MNAME=”$(tr -d “\”\‘’” <<<$MNAME)”
+echo $MNAME > invalid.utf
+tr -d ‘[\200-\377]’ < invalid.utf > valid.utf
+MNAME=‘cat valid.utf‘	
+
+#------------------------------VALIDO EL CAMPO NOTES
+SANM_0x11564=”$(tr -d “\”\‘’” <<<$SANM_0x11564)”
+echo $SANM_0x11564 > invalid.utf
+tr -d ‘[\200-\377]’ < invalid.utf > valid.utf
+NOTES=‘cat valid.utf‘
+
+#------------------------------VALIDO EL CAMPO STATUS
+STATUS=”$(tr -d “\”\‘’” <<<$STATUS)”
+echo $STATUS > invalid.utf
+tr -d ‘[\200-\377]’ < invalid.utf > valid.utf
+STATUS=‘cat valid.utf‘
+
+#------------------------------VALIDO AssetOrganization
+SANM_0x12bfe=”$(tr -d “\”\‘’” <<<$SANM_0x12bfe)”
+echo $SANM_0x12bfe > invalid.utf
+tr -d ‘[\200-\377]’ < invalid.utf > valid.utf
+SANM_0x12bfe=‘cat valid.utf‘
+
+#------------------------------VALIDO AssetDescription  echo “\”AssetDescription\”:\”$SANM_0x12c03\”,”
+SANM_0x12c03=”$(tr -d “\”\‘’” <<<$SANM_0x12c03)”
+echo $SANM_0x12c03 > invalid.utf
+tr -d ‘[\200-\377]’ < invalid.utf > valid.utf
+SANM_0x12c03=‘cat valid.utf‘
+
+#------------------------------VALIDO AssetOffice  	echo “\”AssetOffice\”:\”$SANM_0x12bff\”,”
+SANM_0x12bff=”$(tr -d “\”\‘’” <<<$SANM_0x12bff)”
+echo $SANM_0x12bff > invalid.utf
+tr -d ‘[\200-\377]’ < invalid.utf > valid.utf
+SANM_0x12bff=‘cat valid.utf‘	
+
+#------------------------------VALIDO IP
+rx=’([1-9]?[0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])’
+
+if [[ $IPADDRESS =~ ^$rx\.$rx\.$rx\.$rx$ ]]; then
+	echo “”
+	#echo “valid:     “$IPADDRESS
+else
+	#echo “not valid: “$IPADDRESS
+	IPADDRESS=”0.0.0.0” #SINO LA CARGA EN ELK
+fi
+
+#------------------------------VALIDO COORDENADAS
+
+# DeviceLocation	0x118cd	Text String
+#string=”-32.21705,-58.13628”
+regex=”^-?[0-9]+\.[0-9]+, -?[0-9]+\.[0-9]+$”
+
+if [[ $SANM_0x118cd =~ $regex ]]
+ then
+	COORDS=$SANM_0x118cd
+ else
+ 	COORDS=””
+fi
+
+#------------------------------CAMBIO DE TITULO
+#Uso el atributo del titulo de la alarma, y no el de la alarma establecido en el pcause, asi puedo guardar cuandos los titulos son dinamicos.
+if [ “$SANM_0x12b4c” == “” ]; then  
+	#echo “\”AlarmTitle2\”:\”$ATITTLE\”,”
+	TITTLE=$ATITTLE	
+else
+	#echo “\”AlarmTitle1\”:\”$SANM_0x12b4c\”,”
+	TITTLE=$SANM_0x12b4c
+fi
+
+#------------------------------CAMPOS Y DATOS JSON PARA KIBANA SON : 
+echo_json()
+{	
+	echo “{”
+	echo “\”AlarmID\”:\”$AID\”,”
+	echo “\”AlarmTitle\”:\”$TITTLE\”,”
+	echo “\”DeviceType\”:\”$DTYPE\”,”
+	echo “\”GlobalAlarmID\”:\”$GLOBAL_ALARM_ID\”,”	
+	echo “\”IPAddress\”:\”$IPADDRESS\”,”
+	echo “\”Landscape\”:\”$LANDSCAPE\”,”
+	echo “\”Location\”:\”$COORDS\”,”
+	echo “\”ModelHandle\”:\”$MHANDLE\”,”
+	echo “\”ModelName\”:\”$MNAME\”,”			
+	echo “\”ModelType\”:\”$MTYPE\”,”
+	echo “\”ModelTypeHandle\”:\”$MTHANDLE\”,”
+	echo "\"ModelClass\":\"${MClass[$SANM_0x11ee8]}\","
+	echo “\”ProbableCauseID\”:\”$CAUSE\”,”
+	echo “\”Severity\”:\”$SEV\”,”
+	echo “\”SpectroSERVER\”:\”$SERVER\”,”
+	echo “\”Status\”:\”$STATUS\”,”
+	echo “\”Notes\”:\”$NOTES\”,”
+	echo “\”Ack\”:\”$ACKD\”,”
+	echo “\”Assignment\”:\”$REPAIRPERSON\”,”	
+	echo “\”StartTime\”:\”$STARTTIME\”,”
+	echo “\”GlobalCollection\”:\”$SANM_0x12adb\”,”
+	echo “\”TopologyModelNameString\”:\”$SANM_0x129e7\”,”
+	echo “\”TicketID\”:\”$SANM_0x12022\”,”
+	#echo “\”EndTime\”:\” \”,”
+	echo “\”EventMessage\”:\”$EVENTMSG\”,”
+	echo “\”AssetTag\”:\”$SANM_0x12bfb\”,”
+	echo “\”AssetID\”:\”$SANM_0x12bfc\”,”
+	echo “\”AssetOwner\”:\”$SANM_0x12bfd\”,”
+	echo “\”AssetOrganization\”:\”$SANM_0x12bfe\”,”
+	echo “\”AssetOffice\”:\”$SANM_0x12bff\”,”
+	echo “\”AssetDescription\”:\”$SANM_0x12c03\”,”
+	echo “\”AlarmState\”:\”$ALARMSTATE\””
+	echo “}”
+}
+
+#################### PARA KIBANA
+JSON=‘echo_json‘
+URL=”http://<ELASTICSEARCHIP>:9200/spec_alarms/SANM/$AID”
+curl -m 30 -XPUT “$URL” -d “$JSON”
+

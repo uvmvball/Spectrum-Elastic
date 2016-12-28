@@ -1,0 +1,93 @@
+#!/bin/sh
+##############################################################################
+DATE=$1
+TIME=$2
+MTYPE=$3
+MNAME=”$4”
+AID=$5
+SEV=$6
+CAUSE=$7
+REPAIRPERSON=”$8”
+
+if [ “$USE_NEW_INTERFACE” = “TRUE” ]
+then
+    # ALARMSTATUS now being passed via environment variable
+    shift 8
+else
+    STATUS=$9
+    shift 9
+fi
+
+SERVER=$1
+LANDSCAPE=$2
+MHANDLE=$3
+MTHANDLE=$4
+IPADDRESS=$5
+SECSTR=$6
+ALARMSTATE=$7
+ACKD=$8
+CLEARABLE=$9
+
+shift 9
+
+if [ “$USE_NEW_INTERFACE” = “TRUE” ]
+then
+    # PCAUSE and EVENTMSG now passed via environment variables
+    LOCATION=”$2”
+    AGE=$3
+    NOTIFDATA=$4
+    PID=$5
+    SANM=$6
+    shift 6
+else
+    PCAUSE=‘echo “$2” | tr ‘\350’ ‘\012’ | tr ‘\351’ ‘”’‘
+    LOCATION=”$3”
+    AGE=$4
+    NOTIFDATA=$5
+    EVENTMSG=‘echo “$6” | tr ‘\350’ ‘\012’ | tr ‘\351’ ‘”’‘
+    PID=$7
+    SANM=$8
+    shift 8
+fi
+
+DTYPE=”$1”
+ATITTLE=‘echo $PCAUSE | awk -F’SYMPTOMS:’ ‘{print $1}’‘ 
+EVENTMSG=‘echo $EVENTMSG | grep ^[^\]]*\] | awk ‘NR==1’‘
+
+Z=”-0300”
+ENDTIME=${DATE:6:4}-${DATE:0:2}-${DATE:3:2}T${TIME:0:2}:${TIME:3:2}:${TIME:6:2}$Z
+
+ATITTLE=‘echo $PCAUSE | awk -F’SYMPTOMS:’ ‘{print $1}’‘ 
+ATITTLE=”$(tr -d “\”\‘’” <<<$ATITTLE)”
+
+EVENTMSG=‘echo $EVENTMSG | grep ^[^\]]*\] | awk ‘NR==1’‘
+EVENTMSG=”$(tr -d “\”\‘’” <<<$EVENTMSG)”
+
+#------------------------------VALIDO EL CAMPO NOTES
+SANM_0x11564=”$(tr -d “\”\‘’” <<<$SANM_0x11564)”
+echo $SANM_0x11564 > invalid.utf
+tr -d ‘[\200-\377]’ < invalid.utf > valid.utf
+NOTES=‘cat valid.utf‘
+
+#------------------------------VALIDO EL CAMPO STATUS
+STATUS=”$(tr -d “\”\‘’” <<<$STATUS)”
+echo $STATUS > invalid.utf
+tr -d ‘[\200-\377]’ < invalid.utf > valid.utf
+STATUS=‘cat valid.utf‘
+
+#------------------------------CAMPOS Y DATOS JSON PARA KIBANA SON : 
+echo_json()
+{
+    echo “{”
+        echo “\”doc\” : {”
+            echo “\”Status\”:\”$STATUS\”,”
+            echo “\”Notes\”:\”$NOTES\”,”
+            echo “\”EndTime\”:\”$ENDTIME\””
+        echo “}”
+    echo “}”
+}
+
+URL=”http://<ELASTICSEARCHIP>:9200/spec_alarms/SANM/$AID/_update”
+JSON=‘echo_json‘
+curl -m 30 -XPOST “$URL” -d “$JSON”
+

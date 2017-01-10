@@ -14,6 +14,10 @@ Spectrum Alarm Notifier  → elasticsearch ←→ kibana
 
 MySQL srmdbapi.db ← scheduled script → elasticsearch ←→ kibana
 
+<img src="https://github.com/pereyrdi/Spectrum-Elastic/blob/master/arquitectura.png" />
+<br>
+
+
 # Requerimientos
 I inform the used version of each tool, but this can vary without generating drawbacks in the integration.
 
@@ -96,6 +100,7 @@ An then.... in ElasticSearchDb.OUT
 {”_index”:”spec_alarms”,”_type”:”SANM”,”_id”:”9183217”,”_version”:1,”_shards”:{”total”:1,”successful”:1,”failed”:0},”created”:true}
 {”_index”:”spec_alarms”,”_type”:”SANM”,”_id”:”7983171”,”_version”:1,”_shards”:{”total”:1,”successful”:1,”failed”:0},”created”:true}
 
+<img src="https://github.com/pereyrdi/Spectrum-Elastic/blob/master/MIX.png" />
 
 Enjoy !
 Diego Pereyra
